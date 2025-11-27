@@ -122,17 +122,45 @@ export const logout = async (_, res) => {
 export const getProfile = async (req, res) => {
   try {
     const userId = req.params.id;
-    let user = await User.findById(userId)
-      .populate({ path: "posts", createdAt: -1 })
-      .populate("bookmarks");
+
+    const user = await User.findById(userId)
+      .populate({
+        path: "posts",
+        options: { sort: { createdAt: -1 } },
+        populate: {
+          path: "author",
+          select: "username profilePicture"
+        }
+      })
+      .populate("bookmarks")
+      .populate("followers", "_id username profilePicture bio")
+      .populate("following", "_id username profilePicture bio");
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+        success: false,
+      });
+    }
+
     return res.status(200).json({
-      user,
       success: true,
+      user: {
+        ...user.toObject(),
+        followersData: user.followers,   // populated
+        followingData: user.following,   // populated
+      },
     });
+
   } catch (error) {
     console.log(error);
+    return res.status(500).json({
+      message: "Server error",
+      success: false,
+    });
   }
 };
+
 
 export const editProfile = async (req, res) => {
   try {
