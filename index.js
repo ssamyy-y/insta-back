@@ -28,12 +28,24 @@ const __dirname = path.resolve();
 app.use(express.json());
 app.use(cookieParser());
 app.use(urlencoded({ extended: true }));
-const corsOptions = {
-  origin: "http://localhost:5173",
-  credentials: true,
-};
+const allowedOrigins = [
+  "http://localhost:5173",
+  "insta-front-c368vt6mc-sam-gamings-projects.vercel.app",
+];
 
-app.use(cors(corsOptions));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
+
 
 app.use("/api/v1/user", userRoute);
 app.use("/api/v1/post", postRoute);
