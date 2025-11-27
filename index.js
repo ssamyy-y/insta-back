@@ -2,35 +2,28 @@ import express, { urlencoded } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
+import path from "path";
+
 import connectDB from "./utils/db.js";
 import userRoute from "./routes/user.route.js";
 import postRoute from "./routes/post.route.js";
 import messageRoute from "./routes/message.route.js";
 import { app, server } from "./socket/socket.js";
-import path from 'path'
 
-dotenv.config({});
+dotenv.config();
 
 const PORT = process.env.PORT || 3000;
-
 const __dirname = path.resolve();
 
-
-
-// app.get("/", (_, res) => {
-//   return res.status(200).json({
-//     message: " I am coming from backend",
-//     success: true,
-//   });
-// });
-
-// * Middle wares
+// -------------------- MIDDLEWARES -------------------- //
 app.use(express.json());
-app.use(cookieParser());
 app.use(urlencoded({ extended: true }));
+app.use(cookieParser());
+
+// CORS configuration
 const allowedOrigins = [
-  "http://localhost:5173",
-  "insta-front-c368vt6mc-sam-gamings-projects.vercel.app",
+  "http://localhost:5173", // local frontend
+  "https://insta-front-inky.vercel.app", // deployed Vercel frontend
 ];
 
 app.use(
@@ -39,24 +32,29 @@ app.use(
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
+        console.log("Blocked by CORS:", origin);
         callback(new Error("Not allowed by CORS"));
       }
     },
-    credentials: true,
+    credentials: true, // allow cookies
   })
 );
 
-
+// -------------------- API ROUTES -------------------- //
 app.use("/api/v1/user", userRoute);
 app.use("/api/v1/post", postRoute);
 app.use("/api/v1/message", messageRoute);
 
-app.use(express.static(path.join(__dirname, '/frontend/dist')));
-app.get('*', (req, res) => {
-  res.sendFile(path.resolve(__dirname, 'frontend', 'dist', 'index.html'))
-})
+// -------------------- SERVE FRONTEND -------------------- //
+const frontendPath = path.join(__dirname, "frontend", "dist");
+app.use(express.static(frontendPath));
 
-server.listen(PORT, () => {
-  connectDB();
-  console.log(`Server listening on ${PORT}`);
+app.get("*", (req, res) => {
+  res.sendFile(path.join(frontendPath, "index.html"));
+});
+
+// -------------------- START SERVER -------------------- //
+server.listen(PORT, async () => {
+  await connectDB();
+  console.log(`Server listening on port ${PORT}`);
 });
