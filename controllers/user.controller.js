@@ -16,9 +16,9 @@ export const register = async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ email });
+    let existing = await User.findOne({ email });
 
-    if (user) {
+    if (existing) {
       return res.status(401).json({
         message: "This email is already registered",
         success: false,
@@ -27,19 +27,54 @@ export const register = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    await User.create({
+    const newUser = await User.create({
       username,
       email,
       password: hashedPassword,
     });
-    return res.status(201).json({
-      message: "Acoount created successfully",
-      success: true,
-    });
+
+    // Generate token (same as login)
+    const token = jwt.sign(
+      { userId: newUser._id },
+      process.env.SECRET_KEY,
+      { expiresIn: "1d" }
+    );
+
+    // Create user object to send to frontend
+    const userWithoutPassword = {
+      _id: newUser._id,
+      username: newUser.username,
+      email: newUser.email,
+      profilePicture: newUser.profilePicture,
+      bio: newUser.bio,
+      followers: newUser.followers,
+      following: newUser.following,
+      posts: []
+    };
+
+    return res
+      .cookie("token", token, {
+        httpOnly: true,
+        sameSite: "none",
+        secure: true,
+        maxAge: 1 * 24 * 60 * 60 * 1000,
+      })
+      .status(201)
+      .json({
+        message: "Account created successfully",
+        success: true,
+        user: userWithoutPassword
+      });
+
   } catch (error) {
     console.log(error);
+    return res.status(500).json({
+      message: "Internal server error",
+      success: false
+    });
   }
 };
+
 
 export const login = async (req, res) => {
   try {
