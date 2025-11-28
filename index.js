@@ -24,7 +24,8 @@ app.use(cookieParser());
 const allowedOrigins = [
   "http://localhost:5173", // local frontend
   "https://insta-front-inky.vercel.app",
-  "https://insta-front-git-main-sam-gamings-projects.vercel.app"
+  "https://insta-front-git-main-sam-gamings-projects.vercel.app",
+  "https://insta-front-sam-gamings-projects.vercel.app"
 ];
 
 app.use(
