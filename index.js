@@ -23,7 +23,8 @@ app.use(cookieParser());
 // CORS configuration
 const allowedOrigins = [
   "http://localhost:5173", // local frontend
-  "https://insta-front-inky.vercel.app", // deployed Vercel frontend
+  "https://insta-front-inky.vercel.app",
+  "https://insta-front-git-main-sam-gamings-projects.vercel.app"
 ];
 
 app.use(
